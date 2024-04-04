@@ -18,7 +18,7 @@ class Pop_up(tk.Toplevel):
 
         self.sel_gender = tk.StringVar()
         self.sel_hair = tk.StringVar()
-        self.sel_eye = tk.StringVar()
+        self.sel_skin = tk.StringVar()
         self.sel_number = tk.StringVar()
 
         self.selection = []
@@ -42,7 +42,7 @@ class Pop_up(tk.Toplevel):
 
         self.create_text(14.0, 20.0, "Select gender :")
         self.create_text(14.0, 90.0, "Select hair color :")
-        self.create_text(14.0, 160.0, "Select eye color :")
+        self.create_text(14.0, 160.0, "Select skin tone :")
         self.create_text(14.0, 230.0, "Number of images to display")
    
         self.resizable(False, False)
@@ -65,22 +65,22 @@ class Pop_up(tk.Toplevel):
         gender.pack(pady=45, padx=1)
         gender['state'] = 'readonly'
 
-        hairs = ["Blond", "Brown", "Ginger"]
+        hairs = ["Blond", "Brown"]
         hair = ttk.Combobox(self, values=hairs, width=15, textvariable=self.sel_hair)
         hair.pack(pady=10, padx=1)
         hair['state'] = 'readonly'
         
-        eyes = ["Blue", "Brown", "Green"]
-        eye = ttk.Combobox(self, values=eyes, width=15, textvariable=self.sel_eye)
-        eye.pack(pady=30, padx=1)
-        eye['state'] = 'readonly'
+        skins = ["Pale", "Dark"]
+        skin = ttk.Combobox(self, values=skins, width=15, textvariable=self.sel_skin)
+        skin.pack(pady=30, padx=1)
+        skin['state'] = 'readonly'
 
         numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         number = ttk.Combobox(self, values=numbers, width=15, textvariable=self.sel_number)
         number.pack(pady=35, padx=1)
         number['state'] = 'readonly'
 
-        return [self.sel_gender, self.sel_hair, self.sel_eye, self.sel_number]
+        return [self.sel_gender, self.sel_hair, self.sel_skin, self.sel_number]
     
     def setSelection(self, box):
         for i in range(len(box)):
