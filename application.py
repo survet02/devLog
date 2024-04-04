@@ -28,6 +28,7 @@ class Application(tk.Tk):
         self.history_button = []
         self.click = False
         self.allow_selection = False
+        self.button_bg = []
         self.open_button = Button(self, command=self.button_open, height = 35, width = 35)
 
         self.canvas = tk.Canvas(
@@ -193,13 +194,16 @@ class Application(tk.Tk):
         self.open_button.config(state=tk.NORMAL)
         self.image_grid(int(info[3]))
 
-    def button_select(self):
+    def button_select(self, button):
         """ When the button sleect ou the option select in the menu bar is clicked,
         this functions whanges the statue of allow_selection to continue operations in other functions"""
         if self.allow_selection :
             self.allow_selection = False
+            button.configure(background = "white")
         else :
+
             self.allow_selection = True
+            button.configure(background = "red")
         return self.allow_selection
 
     def button_arrow(self):
@@ -230,29 +234,6 @@ class Application(tk.Tk):
         if file_path:
             # If a file path is chosen, export the selected images to a PNG file
             self.save_image(file_path)
-
-
-    """ def save_image(self, file_path):
-        for i, photo_image in enumerate(self.selected_im):
-            # Convert PhotoImage to PIL Image
-            pil_image = self.photo_image_to_pil(photo_image)
-            if pil_image:
-                # Constructing a unique file name for each image
-                filename = f"{file_path}/image_{i}.png"
-                # Saving the image
-                pil_image.save(filename)
-
-    def photo_image_to_pil(self, photo_image):
-        # Get the width and height of the PhotoImage
-        width = photo_image.width()
-        height = photo_image.height()
-        # Create a PIL Image from the pixel data of the PhotoImage
-        pil_image = Image.new("RGB", (width, height))
-        # Get the pixel data from the PhotoImage
-        data = photo_image.tk.call(photo_image, 'data')
-        # Paste the pixel data into the PIL Image
-        pil_image.frombytes(data)
-        return pil_image """
         
     def open_image(self, path, dimension):
         """ Allows to open images in a given path and with given dimensions"""
@@ -275,8 +256,8 @@ class Application(tk.Tk):
         button_open = Button(self, image=self.image_open, command=self.button_open, height = 35, width = 35)
         button_open.place(x=5, y=15)
 
-        button_select = Button(self, image=self.image_select, command=self.button_select, height =35, width = 35)
-        button_select.place(x=5, y=61)
+        button_sel = Button(self, image=self.image_select, command=lambda : self.button_select(button_sel), height =35, width = 35)
+        button_sel.place(x=5, y=61)
 
         button_round = Button(self, image=self.image_round, command=self.button_arrow, height =35, width = 35)
         button_round.place(x=5, y=107)
@@ -312,10 +293,19 @@ class Application(tk.Tk):
             y_pos += dim[1] + padding
 
     def clear_board(self):
-        while self.board_button:
-            button = self.board_button.pop()  # Remove the last button
+        # Destroy all buttons
+        for button in self.board_button:
             button.destroy()
-        
+
+        # Destroy all background frames
+        for frame in self.button_bg:
+            frame.pack_forget()
+            frame.destroy()
+
+        # Clear the lists
+        self.board_button.clear()
+        self.button_bg.clear()
+  
 
     def scrolling_board(self):
         """ This function creates a canva with a scrolling bar
@@ -338,21 +328,23 @@ class Application(tk.Tk):
 
     def create_button(self, im, position, dim):
         """ In this function we can create buttons with given images on top of it, at a specific position and dimensions"""
-        button = Button(self, image=im, command=lambda : self.clicked(im, button), height = dim[0], width = dim[1])
+        bg = tk.Frame(self, highlightbackground="#201836", highlightcolor="#201836", highlightthickness=4, bd=0, height = dim[0]+9, width = dim[1] + 9)
+        bg.place(x=position[0]-2, y=position[1]-2)
+        button = Button(self, image=im, command=lambda : self.clicked(im, bg), height = dim[0], width = dim[1])
         button.place(x=position[0], y=position[1])
 
         return button
 
 
-    def clicked(self, im, button):
+    def clicked(self, im, bg):
         """ This function changes the appearance of the image buttons on the board when they are selected, but only if the tool selection was launched"""
         if self.allow_selection :
             if self.click and im in self.selected_im : 
-                button.config(bg="SystemButtonFace")
+                bg.config( highlightbackground="#201836", highlightcolor="#201836")
                 self.selected_im.remove(im)
                 self.click = False
             else :
-                button.config(bg="red")
+                bg.config( highlightbackground="red", highlightcolor="red")
                 self.selected_im.append(im)
                 self.click = True
 
@@ -364,14 +356,18 @@ class Application(tk.Tk):
         x, y = position
         dim = (100,100)
         for image in self.selected_im :
-            button = self.create_button(image, [x, y], dim)
+            tk_image = self.resize_im(image, dim)
+            button = self.create_button(tk_image, [x, y], dim)
             self.history_button.append(button)
             y += 100 + spacing
-        return self.history_button
-    
+        return self.history_button  
 
+    def resize_im(self, im, dim):
+        img_PIL = ImageTk.getimage(im)
+        resized = img_PIL.resize(dim)
+        tk_image = ImageTk.PhotoImage(resized)
 
-        
+        return tk_image
 
 if __name__ == "__main__":
     app = Application()
