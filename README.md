@@ -18,17 +18,19 @@ Installing the library with pip is the easiest way to get started with faceguess
 python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps faceguessr
 ```
 
-If you do not have all the required packages, use : 
-
-```bash
-pip install -r requirements.txt
-```
-
 Then go to the folder where faceguessr is : 
 
 ```bash
 cd lib/python3.9/site-packages/faceguessr
 ```
+
+
+If you do not have all the required packages, use : 
+
+```bash
+pip install -r requirements.txt
+```
+Launch setup.py the first time you download faceguessr in order to download the remaining files needed to use faceguessr.
 
 ```bash
 python3 setup.py 
@@ -43,6 +45,7 @@ python3 setup.py
 <details>
 <summary>Launch the software in your Terminal.</summary>
 You have to be in the faceguessr directory where the file application.py is.
+  
 ```bash
 python3 application.py
 ```
