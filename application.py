@@ -38,6 +38,7 @@ class Application(tk.Tk):
         #Attributes
         self.images = []
         self.selected_im = []
+        self.generated_image = []
         self.board_button = []
         self.history_buttons = []  # Store all history buttons
         self.click = False
@@ -63,7 +64,6 @@ class Application(tk.Tk):
         self.background()
         self.create_menu_bar()
         self.add_button()
-        #self.create_history_area()
         
 
 
@@ -82,7 +82,7 @@ class Application(tk.Tk):
             57.0,
             11.0,
             788.0,
-            713.0,
+            747.0,
             fill="#201F1F",
             outline=""
             )
@@ -174,10 +174,10 @@ class Application(tk.Tk):
         self.config(menu=menu_bar)
 
     def new_window(self):
-        """ This function is launched when the user clickes on  new in the menu bar
-        It opens a new application window"""
+        """ This function clears the page to start a new simulation"""
 
-        new_window = Application()
+        self.clear_board()
+        self.clear_history()
 
     def do_about(self):
         """ This function is launched when the user clickes on About in the menu bar
@@ -185,17 +185,6 @@ class Application(tk.Tk):
 
         messagebox.showinfo("My title", "My message")
 
-    def changeOnHover(button, colorOnHover, colorOnLeave):
-        """ Alllows to change the color of a button when we hover over it"""
- 
-    # adjusting backgroung of the widget
-    # background on entering widget
-        button.bind("<Enter>", func=lambda e: button.config(
-            background=colorOnHover))
- 
-    # background color on leving widget
-        button.bind("<Leave>", func=lambda e: button.config(
-            background=colorOnLeave))
 
     def button_open(self):
         """ It is launched when the user clicks on the button open of on the option open in the menu bar
@@ -261,6 +250,8 @@ class Application(tk.Tk):
         
             converted = convert_image_to_tensor(self.selected_im)
             self.images_algo_gen = algo_gen(converted)
+            self.generated_image = self.images_algo_gen
+            print(type(self.generated_image))
             self.images_algo_gen = [self.images_algo_gen[i].squeeze(0) for i in range(len(self.images_algo_gen))]
             new = len(self.images) - len(self.selected_im)
             new_images, index = images_initiales(new, self.possible_index, test_dataset)
@@ -272,10 +263,15 @@ class Application(tk.Tk):
                 self.images_algo_gen.append(new_images[i])
         
             self.image_grid(len(self.images_algo_gen), self.images_algo_gen)
+            self.highlight_generated(self.generated_image)
         
             self.allow_selection = False
             self.button_sel.configure(background="white")
+            self.generated_image = []
             self.selected_im = []  # Clear the list of selected images
+
+            for button in self.history_buttons:
+                button.configure(borderwidth = 0)
         else:
             messagebox.showinfo("Error", "No images were selected")
 
@@ -364,6 +360,11 @@ class Application(tk.Tk):
             row_images = self.images[i:i + images_per_row]
             self.display_image(row_images, (x_pos, y_pos), padding)
             y_pos += dim[1] + padding
+        
+    def highlight_generated(self, image):
+        if self.generated_image :
+            for i in range(len(image)):
+                self.board_button[i].configure(background = "#ff9e00", borderwidth=5)
     
 
     def clear_board(self):
@@ -381,37 +382,12 @@ class Application(tk.Tk):
         self.history_buttons.clear()
   
 
-    """ def create_history_area(self):
-        #Create a scrolling board in the history area.
-        # Create the canvas for history area
-        self.history_canvas = tk.Canvas(self, bg="#201F1F", width=130, height=700)
-        self.history_canvas.place(x=794, y=55)
-
-        # Create the vertical scrollbar for history area
-        self.history_scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.history_canvas.yview)
-        self.history_scrollbar.place(x=920, y=55, height=700)
-
-        # Create a frame inside the canvas to hold the history images
-        self.history_scrollable_frame = tk.Frame(self.history_canvas, bg="#201F1F")
-        self.history_canvas.create_window((0, 0), window=self.history_scrollable_frame, anchor="nw")
-
-        # Bind events to configure the canvas scroll region
-        self.history_scrollable_frame.bind("<Configure>", self.on_history_frame_configure)
-        self.history_canvas.bind("<Configure>", self.on_history_canvas_configure)
-
-    def on_history_frame_configure(self, event):
-        #Configure the history canvas scroll region.
-        self.history_canvas.configure(scrollregion=self.history_canvas.bbox("all"))
-
-    def on_history_canvas_configure(self, event):
-        #Update the history canvas scroll region when canvas is resized.
-        self.history_canvas.itemconfig(self.history_scrollable_frame, width=event.width)
- """
     def history(self, position):
         """ This functions creates a history on the right side of the board where all the selected images can be saved"""
         spacing = 10
         x, y = position
         dim = (100, 100)
+        max_history_images = 6
     
         # Create buttons for newly selected images
         new_buttons = []
@@ -423,7 +399,11 @@ class Application(tk.Tk):
     
         self.history_initial_position = (x,y)
         # Append new buttons to the existing history_buttons list
-        self.history_buttons.extend(new_buttons)
+        self.history_buttons = new_buttons + self.history_buttons
+        print(self.history_buttons)
+        # Remove excess buttons from the screen
+        for button in self.history_buttons[max_history_images:]:
+            button.destroy()
     
         return self.history_buttons
 
@@ -446,6 +426,7 @@ class Application(tk.Tk):
             else :
                 button.config(relief=tk.SUNKEN)  # Change relief to give a sunken appearance
                 button.config(borderwidth=3)
+                button.config(background = "#9281C1")
                 self.selected_im.append(im)
                 self.click = True
 
