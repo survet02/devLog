@@ -183,7 +183,11 @@ class Application(tk.Tk):
         """ This function is launched when the user clickes on About in the menu bar
         It opens a pop up window with informations on the software"""
 
-        messagebox.showinfo("My title", "My message")
+        message = """FaceGuesser was build by four students in 4th year at INSA Lyon in the Department of BioInformatics.
+        The software aims at generating images of faces according to a genetic algorithm. The idea is to display faces from a known database and to create new face from selected ones."""
+
+
+        messagebox.showinfo("About FaceGuesser", message)
 
 
     def button_open(self):
@@ -419,13 +423,11 @@ class Application(tk.Tk):
         """ This function changes the appearance of the image buttons on the board when they are selected, but only if the tool selection was launched"""
         if self.allow_selection :
             if self.click and im in self.selected_im : 
-                button.config(relief=tk.FLAT)  # Change relief to give a sunken appearance
                 button.config(borderwidth=0)
                 self.selected_im.remove(im)
                 self.click = False
             else :
-                button.config(relief=tk.SUNKEN)  # Change relief to give a sunken appearance
-                button.config(borderwidth=3)
+                button.config(borderwidth=5)
                 button.config(background = "#9281C1")
                 self.selected_im.append(im)
                 self.click = True
