@@ -19,3 +19,12 @@ pip install devLog
 ```
 
 </details>
+
+# 📦 How to use
+
+Launch the software.
+
+```bash
+python3 application.py
+```
+Click on 
