@@ -236,7 +236,8 @@ class Application(tk.Tk):
         return self.allow_selection
 
     def button_arrow(self):
-        """launches the genetic algorithm"""
+        """launches the genetic algorithm
+        opens an error dialog if no images selected"""
         if self.selected_im:
             dim = (256, 256)
         
@@ -251,15 +252,15 @@ class Application(tk.Tk):
             self.images_algo_gen = algo_gen(converted)
             self.generated_image = self.images_algo_gen
             self.images_algo_gen = [self.images_algo_gen[i].squeeze(0) for i in range(len(self.images_algo_gen))]
+            
             new = len(self.images) - len(self.selected_im)
             new_images, index = images_initiales(new, self.possible_index, test_dataset)
             self.clear_board()
-        
             index = sorted(index, reverse=True)
             for i in range(len(new_images)):
                 self.possible_index.remove(self.possible_index[index[i]])
                 self.images_algo_gen.append(new_images[i])
-        
+
             self.image_grid(len(self.images_algo_gen), self.images_algo_gen)
             self.highlight_generated(self.generated_image)
         
@@ -267,9 +268,9 @@ class Application(tk.Tk):
             self.button_sel.configure(background="white")
             self.generated_image = []
             self.selected_im = []  # Clear the list of selected images
-
-            for button in self.history_buttons:
-                button.configure(borderwidth = 0)
+            if self.history_buttons:
+                for button in self.history_buttons:
+                    button.configure(borderwidth = 0)
         else:
             messagebox.showinfo("Error", "No images were selected")
 
@@ -387,29 +388,33 @@ class Application(tk.Tk):
   
 
     def history(self, position):
-        """Creates a history on the right side of the board."""
+        """ This functions creates a history on the right side of the board where all the selected images can be saved"""
+        spacing = 10
         x, y = position
         dim = (100, 100)
         max_history_images = 6
-        spacing = 10
     
         # Create buttons for newly selected images
         new_buttons = []
+        
+        nb_images_tot = len(self.history_buttons) + len(self.selected_im)
+        
         for image in self.selected_im:
             tk_image = self.resize_im(image, dim)
             button = self.create_button(tk_image, [x, y], dim)
             new_buttons.append(button)
             y += 100 + spacing
-    
+            if y == 715:
+                y = 55
+        
         self.history_initial_position = (x,y)
         # Append new buttons to the existing history_buttons list
-        self.history_buttons = new_buttons + self.history_buttons
-        # Remove excess buttons from the screen
-        for button in self.history_buttons[max_history_images:]:
-            button.destroy()
-    
+        for i in range((nb_images_tot-max_history_images), len(self.history_buttons)):
+            new_buttons.append(self.history_buttons[i])
+        self.history_buttons = new_buttons
         return self.history_buttons
 
+    
     def create_button(self, im, position, dim):
         """Creates buttons with given images."""
         button = Button(self, image=im, command=lambda : self.clicked(im, button), height = dim[0], width = dim[1], borderwidth=0)
@@ -506,12 +511,15 @@ def crossover(selections):
     return produits
            
 def images_initiales(nombre_images,images_possibles_index,images_tot):
+    if len(images_possibles_index)>= nombre_images:
+        random_index = random.sample(range(len(images_possibles_index)), nombre_images)
+        images = [images_tot[images_possibles_index[index]][0].to(device) for index in random_index]
+        reconstructed = [autoencoder(images[i].unsqueeze(0)).squeeze(0) for i in range(len(images))]
+        return reconstructed,random_index
+    else:
+        return messagebox.showinfo("Error", "No more images left")
+        
 
-    #random_index = [random.randint(0, len(images_possibles_index)) for _ in range(nombre_images)]
-    random_index = random.sample(range(len(images_possibles_index)), nombre_images)
-    images = [images_tot[images_possibles_index[index]][0].to(device) for index in random_index]
-    reconstructed = [autoencoder(images[i].unsqueeze(0)).squeeze(0) for i in range(len(images))]
-    return reconstructed,random_index
     
 def algo_gen(selected):
     encoded = [autoencoder.flatten(autoencoder.encoder(selected[i].permute(1, 2, 0).unsqueeze(0).permute(0, 2, 1, 3))) for i in range(len(selected))]
@@ -539,21 +547,6 @@ def convert_image_to_tensor(list_images):
         converted.append(tensor_image)
     return converted
     
-def data_select(path_csv, gender, blond_hair, brown_hair, pale_skin): #black_hair, , gray_hair,
-    data = pd.read_csv(path_csv)
-    if gender != 0:
-        data = data.loc[data['Male'] == gender]
-    #if black_hair != 0:
-    #    data = data.loc[data['Black_Hair'] == black_hair]
-    if blond_hair != 0:
-        data = data.loc[data['Blond_Hair'] == blond_hair]
-    if brown_hair != 0:
-        data = data.loc[data['Brown_Hair'] == brown_hair]
-    #if gray_hair != 0:
-    #    data = data.loc[data['Gray_Hair'] == gray_hair]
-    if pale_skin != 0:
-        data = data.loc[data['Pale_Skin'] == pale_skin]
-    return data
 
 def data_selected(images_tot, gender, blond_hair, brown_hair, pale_skin):
     # Get all targets from the dataset
