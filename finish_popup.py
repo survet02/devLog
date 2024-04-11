@@ -70,6 +70,8 @@ class finish_popup(tk.Toplevel):
         self.parent.selected_im.clear()
         self.parent.clear_board()
         self.parent.clear_history()
+        self.parent.button_sel.configure(background = "white")
+
         self.destroy()
 
 if __name__ == "__main__":

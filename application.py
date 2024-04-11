@@ -33,7 +33,7 @@ class Application(tk.Tk):
         self.assets_path = self.output_path / "C:/Users/zazad/OneDrive/Documents/INSA_4A/devLog/build/assets/frame2"
         self.geometry("925x722")
         self.configure(bg="#100F0F")
-        self.title("Face Generator - v.1.0.0")
+        self.title("FaceGuessr - v.1.0.0")
 
         #Attributes
         self.images = []
@@ -44,8 +44,8 @@ class Application(tk.Tk):
         self.click = False
         self.allow_selection = False
         self.button_bg = []
-        self.open_button = tk.Button(self, command=self.button_open, height=35, width=35)
-        self.button_sel = tk.Button(self, height=35, width=35)
+        self.open_button = Button(self, command=self.button_open, height=35, width=35)
+        self.button_sel = Button(self)
 
         self.images_algo_gen = []
         self.possible_index = []
@@ -162,11 +162,11 @@ class Application(tk.Tk):
         menu_bar.add_cascade(label="File", menu=menu_file)
 
         menu_edit = Menu(menu_bar, tearoff=0)
-        menu_edit.add_command(label="Select", command=self.button_select(self.button_sel))
+        menu_edit.add_command(label="Select", command=self.button_select)
         menu_edit.add_separator()
         menu_edit.add_command(label="Generate", command=self.button_arrow)
         menu_edit.add_command(label="Open", command=self.button_open)
-        menu_edit.add_command(label="Export", command=self.button_export)
+        menu_edit.add_command(label="Export", command=self.button_finish)
         menu_bar.add_cascade(label="Tools", menu=menu_edit)
 
         menu_help = Menu(menu_bar, tearoff=0)
@@ -180,15 +180,16 @@ class Application(tk.Tk):
 
         self.clear_board()
         self.clear_history()
+        self.button_sel.configure(background = "white")
 
     def do_about(self):
         """Displays information about the software."""
 
-        message = """FaceGuesser was build by four students in 4th year at INSA Lyon in the Department of BioInformatics.
+        message = """   FaceGuessr was build by four students in 4th year at INSA Lyon in the Department of BioInformatics.
         The software aims at generating images of faces according to a genetic algorithm. The idea is to display faces from a known database and to create new face from selected ones."""
 
 
-        messagebox.showinfo("About FaceGuesser", message)
+        messagebox.showinfo("About FaceGuessr", message)
 
 
     def button_open(self):
@@ -222,17 +223,16 @@ class Application(tk.Tk):
             self.image_grid(int(info[3]),images)
             
         else:
-            messagebox.showinfo("Error", ("Not enough images to show. Maximum number of images = ",len(data_index)))
+            messagebox.showinfo("Error", ("Not enough images to show. Maximum number of images = ",len(data_index))) # type: ignore
 
-    def button_select(self, button):
+    def button_select(self):
         """Changes the state of allow_selection to continue operations in other functions."""
         if self.allow_selection :
             self.allow_selection = False
-            button.configure(background = "white")
+            self.button_sel.configure(background = "white")
         else :
-
             self.allow_selection = True
-            button.configure(background = "#9281C1")
+            self.button_sel.configure(background = "#9281C1")
         return self.allow_selection
 
     def button_arrow(self):
@@ -273,12 +273,15 @@ class Application(tk.Tk):
         else:
             messagebox.showinfo("Error", "No images were selected")
 
-    def button_export(self):
+    def button_finish(self):
         """Opens a pop-up window that displays the final selected image."""
 
         if not self.selected_im:
             # If no images are selected, show an error dialog
             messagebox.showerror("Error", "No images selected.")
+            return
+        elif len(self.selected_im)>1 :
+            messagebox.showerror("Error", "More than 1 image selected")
             return
         else : 
             pop_up = finish_popup(self)
@@ -317,14 +320,14 @@ class Application(tk.Tk):
         button_open = Button(self, image=self.image_open, command=self.button_open, height = 35, width = 35)
         button_open.place(x=5, y=15)
 
-        self.button_sel = Button(self, image=self.image_select, command=lambda : self.button_select(self.button_sel), height =35, width = 35)
+        self.button_sel = Button(self, image=self.image_select, command=self.button_select, height =35, width = 35)
         self.button_sel.place(x=5, y=61)
 
         button_round = Button(self, image=self.image_round, command=self.button_arrow, height =35, width = 35)
         button_round.place(x=5, y=107)
 
-        button_export = Button(self, image=self.image_export, command=self.button_export, height =35, width = 35)
-        button_export.place(x=5, y=153)
+        button_fin = Button(self, image=self.image_export, command=self.button_finish, height =35, width = 35)
+        button_fin.place(x=5, y=153)
 
     def display_image(self, myImages, start_position, spacing):
         """Displays images in line at a given starting position and with a given spacing."""
