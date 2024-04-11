@@ -45,6 +45,8 @@ class Application(tk.Tk):
         self.allow_selection = False
         self.button_bg = []
         self.open_button = tk.Button(self, command=self.button_open, height=35, width=35)
+        self.button_sel = tk.Button(self, height=35, width=35)
+
         self.images_algo_gen = []
         self.possible_index = []
         self.history_initial_position = (805, 55)
@@ -160,7 +162,7 @@ class Application(tk.Tk):
         menu_bar.add_cascade(label="File", menu=menu_file)
 
         menu_edit = Menu(menu_bar, tearoff=0)
-        menu_edit.add_command(label="Select", command=self.button_select)
+        menu_edit.add_command(label="Select", command=self.button_select(self.button_sel))
         menu_edit.add_separator()
         menu_edit.add_command(label="Generate", command=self.button_arrow)
         menu_edit.add_command(label="Open", command=self.button_open)
@@ -180,8 +182,7 @@ class Application(tk.Tk):
         self.clear_history()
 
     def do_about(self):
-        """ This function is launched when the user clickes on About in the menu bar
-        It opens a pop up window with informations on the software"""
+        """Displays information about the software."""
 
         message = """FaceGuesser was build by four students in 4th year at INSA Lyon in the Department of BioInformatics.
         The software aims at generating images of faces according to a genetic algorithm. The idea is to display faces from a known database and to create new face from selected ones."""
@@ -191,16 +192,12 @@ class Application(tk.Tk):
 
 
     def button_open(self):
-        """ It is launched when the user clicks on the button open of on the option open in the menu bar
-        It opens a pop up window called Pop_up to allow the user to select categories to narrow the choices of images to open and the number of images
-        to open
-        """
+        """Opens a Pop_up window to select categories and the number of images to open."""
         self.open_button.config(state=tk.DISABLED)
         pop_up = Pop_up(self)
     
     def on_popUp_finish(self, info):
-        """ This function waits for the actions in open_button and by extension Pop_up to finish before displaying the images on the board
-        """
+        """Waits for actions in open_button/Pop_up to finish before displaying the images on the board."""
         self.open_button.config(state=tk.NORMAL)
         gender = 0
         blond_hair = 0
@@ -228,8 +225,7 @@ class Application(tk.Tk):
             messagebox.showinfo("Error", ("Not enough images to show. Maximum number of images = ",len(data_index)))
 
     def button_select(self, button):
-        """ When the button sleect ou the option select in the menu bar is clicked,
-        this functions whanges the statue of allow_selection to continue operations in other functions"""
+        """Changes the state of allow_selection to continue operations in other functions."""
         if self.allow_selection :
             self.allow_selection = False
             button.configure(background = "white")
@@ -240,8 +236,7 @@ class Application(tk.Tk):
         return self.allow_selection
 
     def button_arrow(self):
-        """launches the genetic algorithm
-        opens an error dialog if no images selected"""
+        """launches the genetic algorithm"""
         if self.selected_im:
             dim = (256, 256)
         
@@ -255,7 +250,6 @@ class Application(tk.Tk):
             converted = convert_image_to_tensor(self.selected_im)
             self.images_algo_gen = algo_gen(converted)
             self.generated_image = self.images_algo_gen
-            print(type(self.generated_image))
             self.images_algo_gen = [self.images_algo_gen[i].squeeze(0) for i in range(len(self.images_algo_gen))]
             new = len(self.images) - len(self.selected_im)
             new_images, index = images_initiales(new, self.possible_index, test_dataset)
@@ -280,7 +274,7 @@ class Application(tk.Tk):
             messagebox.showinfo("Error", "No images were selected")
 
     def button_export(self):
-        """Opens a pop-up window that displayed the finaly selected image."""
+        """Opens a pop-up window that displays the final selected image."""
 
         if not self.selected_im:
             # If no images are selected, show an error dialog
@@ -291,7 +285,7 @@ class Application(tk.Tk):
 
         
     def open_image(self, path, dimension):
-        """ Allows to open images in a given path and with given dimensions"""
+        """Opens images in a given path with given dimensions."""
         self.image = Image.open(path)
         self.resized = self.image.resize(dimension)
         self.tk_image = ImageTk.PhotoImage(self.resized)
@@ -299,7 +293,7 @@ class Application(tk.Tk):
         return self.tk_image
         
     def open_image_reconstructed(self, reconstructed_image, dimension):
-        """ Converts a reconstructed image (Tensor) to a Tkinter PhotoImage and resizes it """
+        """Converts a reconstructed image tensor to a Tkinter PhotoImage and resizes it."""
         # Convert the reconstructed image tensor to a numpy array and then to a PIL Image
         np_image = reconstructed_image.detach().cpu().permute(1, 2, 0).numpy()
         self.image = Image.fromarray(np.uint8(np_image * 255))
@@ -312,7 +306,7 @@ class Application(tk.Tk):
 
 
     def add_button(self):
-        """ This function creates all the buttons in the tool bar, on the left side of the board"""
+        """Creates all the buttons in the toolbar."""
         dim = (35,35)
         self.image_open = self.open_image("images/open2.png", dim)
         self.image_select = self.open_image("images/select2.png", dim)
@@ -333,7 +327,7 @@ class Application(tk.Tk):
         button_export.place(x=5, y=153)
 
     def display_image(self, myImages, start_position, spacing):
-        """ this function displays images in line at a given starting position and with a given spacing in between"""
+        """Displays images in line at a given starting position and with a given spacing."""
         x_pos, y_pos = start_position
         dim = (200,200)
         for image in myImages:
@@ -343,7 +337,7 @@ class Application(tk.Tk):
         return self.board_button  # Return the list of buttons
 
     def image_grid(self, nb, list_image):
-        """ Here the images are displayed in 3 by 3 grid """
+        """Displays images in a 3 by 3 grid."""
         dim = (256, 256)
         padding = 0
         images_per_row = 3
@@ -366,12 +360,14 @@ class Application(tk.Tk):
             y_pos += dim[1] + padding
         
     def highlight_generated(self, image):
+        """Highlights generated images."""
         if self.generated_image :
             for i in range(len(image)):
                 self.board_button[i].configure(background = "#ff9e00", borderwidth=5)
     
 
     def clear_board(self):
+        """Clears the board."""
         # Destroy all buttons
         for button in self.board_button:
             button.destroy()
@@ -380,6 +376,7 @@ class Application(tk.Tk):
         self.board_button.clear()
 
     def clear_history(self):
+        """Clears the history."""
         for button in self.history_buttons:
             button.destroy()
     
@@ -387,11 +384,11 @@ class Application(tk.Tk):
   
 
     def history(self, position):
-        """ This functions creates a history on the right side of the board where all the selected images can be saved"""
-        spacing = 10
+        """Creates a history on the right side of the board."""
         x, y = position
         dim = (100, 100)
         max_history_images = 6
+        spacing = 10
     
         # Create buttons for newly selected images
         new_buttons = []
@@ -404,7 +401,6 @@ class Application(tk.Tk):
         self.history_initial_position = (x,y)
         # Append new buttons to the existing history_buttons list
         self.history_buttons = new_buttons + self.history_buttons
-        print(self.history_buttons)
         # Remove excess buttons from the screen
         for button in self.history_buttons[max_history_images:]:
             button.destroy()
@@ -412,7 +408,7 @@ class Application(tk.Tk):
         return self.history_buttons
 
     def create_button(self, im, position, dim):
-        """ In this function we can create buttons with given images on top of it, at a specific position and dimensions"""
+        """Creates buttons with given images."""
         button = Button(self, image=im, command=lambda : self.clicked(im, button), height = dim[0], width = dim[1], borderwidth=0)
         button.place(x=position[0], y=position[1])
 
@@ -420,7 +416,7 @@ class Application(tk.Tk):
 
 
     def clicked(self, im, button):
-        """ This function changes the appearance of the image buttons on the board when they are selected, but only if the tool selection was launched"""
+        """Changes the appearance of image buttons on the board when they are selected."""
         if self.allow_selection :
             if self.click and im in self.selected_im : 
                 button.config(borderwidth=0)
@@ -435,6 +431,7 @@ class Application(tk.Tk):
         return self.selected_im
 
     def resize_im(self, im, dim):
+        """Resizes images."""
         img_PIL = ImageTk.getimage(im)
         resized = img_PIL.resize(dim)
         tk_image = ImageTk.PhotoImage(resized)
