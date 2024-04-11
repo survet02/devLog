@@ -8,6 +8,22 @@ from PIL import Image, ImageTk
 from Pop_up import Pop_up
 from finish_popup import finish_popup
 
+import os
+import wget
+import zipfile
+import torch
+import torchvision.datasets as datasets
+import torchvision.transforms as tfms
+import torch.nn as nn
+import random
+import matplotlib.pyplot as plt
+from torchvision import transforms
+import numpy as np
+import tempfile
+from torchvision.transforms import ToTensor
+import io
+import pandas as pd
+
 class Application(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -28,6 +44,8 @@ class Application(tk.Tk):
         self.allow_selection = False
         self.button_bg = []
         self.open_button = Button(self, command=self.button_open, height = 35, width = 35)
+        self.images_algo_gen = []
+        self.possible_index = []
 
         self.canvas = tk.Canvas(
             self,
@@ -190,7 +208,30 @@ class Application(tk.Tk):
         """ This function waits for the actions in open_button and by extension Pop_up to finish before displaying the images on the board
         """
         self.open_button.config(state=tk.NORMAL)
-        self.image_grid(int(info[3]))
+        gender = 0
+        blond_hair = 0
+        brown_hair = 0
+        pale_skin = 0
+        path_csv = "list_attr_test.csv"
+        if info[0] == 'Male':
+            gender = 1
+        if info[1] == 'Blond':
+            blond_hair = 1
+        elif info[1] == 'Brown':
+            brown_hair = 1
+        if info[2] == 'Pale':
+            pale_skin = 1
+
+        self.possible_index = data_selected(test_dataset, gender, blond_hair, brown_hair, pale_skin)
+        if (len(self.possible_index) >= int(info[3])):
+            images,index = images_initiales(int(info[3]),self.possible_index,test_dataset)
+            index = sorted(index, reverse=True)
+            for i in index:
+                self.possible_index.remove(self.possible_index[i])
+            self.image_grid(int(info[3]),images)
+            
+        else:
+            messagebox.showinfo("Error", ("Not enough images to show. Maximum number of images = ",len(data_index)))
 
     def button_select(self, button):
         """ When the button sleect ou the option select in the menu bar is clicked,
@@ -208,11 +249,28 @@ class Application(tk.Tk):
         """launches the genetic algorithm
         opens an error dialog if no images selected"""
         if self.selected_im :
+            dim = (256,256)
             self.history((805, 55))
+            for i in range(len(self.selected_im)):
+                if self.selected_im[i].width() != 256:
+                    self.selected_im[i] = self.resize_im(self.selected_im[i], dim)
+            converted = convert_image_to_tensor(self.selected_im)
+            self.images_algo_gen = algo_gen(converted)
+            self.images_algo_gen = [self.images_algo_gen[i].squeeze(0) for i in range(len(self.images_algo_gen))]
+            new = len(self.images) - len(self.selected_im)
+            new_images,index = images_initiales(new,self.possible_index,test_dataset)
             self.clear_board()
+            index = sorted(index, reverse=True)
+            for i in range(len(new_images)):
+                    #self.images_algo_gen.append(torch.rot90(new_images[i].permute(2,0,1), k=3, dims=(1, 2)))
+                    self.possible_index.remove(self.possible_index[index[i]])
+                    self.images_algo_gen.append(new_images[i])
+            self.image_grid(len(self.images_algo_gen),self.images_algo_gen)
+            self.allow_selection = False
+            self.selected_im = []  # Clear the list of selected images
+            return self.images_algo_gen
         else :
             messagebox.showinfo("Error", "No images were selected")
-
 
     def button_export(self):
         """Opens a pop-up window that displayed the finaly selected image."""
@@ -231,6 +289,18 @@ class Application(tk.Tk):
         self.resized = self.image.resize(dimension)
         self.tk_image = ImageTk.PhotoImage(self.resized)
 
+        return self.tk_image
+        
+    def open_image_reconstructed(self, reconstructed_image, dimension):
+        """ Converts a reconstructed image (Tensor) to a Tkinter PhotoImage and resizes it """
+        # Convert the reconstructed image tensor to a numpy array and then to a PIL Image
+        np_image = reconstructed_image.detach().cpu().permute(1, 2, 0).numpy()
+        self.image = Image.fromarray(np.uint8(np_image * 255))
+        # Resize the image
+        self.resized = self.image.resize(dimension)
+        # Convert the resized image to a Tkinter PhotoImage
+        self.tk_image = ImageTk.PhotoImage(self.resized)
+    
         return self.tk_image
 
 
@@ -265,15 +335,21 @@ class Application(tk.Tk):
             x_pos += image.width() + spacing
         return self.board_button  # Return the list of buttons
 
-    def image_grid(self, nb):
+    def image_grid(self, nb, list_image):
         """ Here the images are displayed in 3 by 3 grid """
         dim = (256, 256)
         padding = 0
         images_per_row = 3
 
         # Load images
-        for i in range(nb):
-            self.images.append(self.open_image("images/exemple.png", dim))
+        #for i in range(nb):
+        #    self.images.append(self.open_image("images/exemple.png", dim))
+        #self.images = [self.open_image_reconstructed(image, dim) for i in range(len(images_initiales(nb,test_dataset)))]
+
+        if isinstance(list_image[0], PhotoImage):
+            self.images = list_image
+        else:
+            self.images = [self.open_image_reconstructed(image, dim) for image in list_image]
 
         x_pos, y_pos = (65, 20)
 
@@ -281,6 +357,7 @@ class Application(tk.Tk):
             row_images = self.images[i:i + images_per_row]
             self.display_image(row_images, (x_pos, y_pos), padding)
             y_pos += dim[1] + padding
+    
 
     def clear_board(self):
         # Destroy all buttons
@@ -359,6 +436,158 @@ class Application(tk.Tk):
 
         return tk_image
 
+class ConvAE3(nn.Module): #tester 3 ->8 8->16 16->32, prendre images en 128, VV -> batch_size de 8
+    def __init__(self):
+        super(ConvAE3, self).__init__()
+        # Encodeur
+        self.encoder = nn.Sequential(
+            nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1),  # RVB, 256x256x3 -> 256x256x16
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),  # 256x256x16 -> 128x128x16
+            nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1),  # 128x128x16 -> 64*64*32
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),  # 64*64*32 -> 32*32*32
+            nn.Conv2d(32, 16, kernel_size=3, stride=2, padding=1),  # 16*16*16 -> 16*16*16
+            nn.ReLU(),
+            #nn.Flatten()  # Aplatir les features en 1D
+        )
+        self.flatten = nn.Flatten()
+        self.linear = nn.Linear(16*16*16, 32*32*16)
+        # Décodeur
+        self.decoder = nn.Sequential(
+            #nn.Linear(64*64*4, 64*64*8),  # Correction de la taille de l'entrée
+            nn.ReLU(),
+            nn.Unflatten(1, (16, 32, 32)),  # Correction de la taille du tensor
+            nn.ConvTranspose2d(16, 32, kernel_size=3, stride=2, padding=1, output_padding=1),  # 32*32*16 -> 64*64*32
+            nn.ReLU(),
+            nn.ConvTranspose2d(32, 16, kernel_size=3, stride=2, padding=1, output_padding=1),  # 64*64*32 -> 128*128*16
+            nn.ReLU(),
+            nn.ConvTranspose2d(16, 3, kernel_size=3, stride=2, padding=1, output_padding=1),  # 128*128*16 -> 256x256x3
+            nn.Tanh()
+        )
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.flatten(x)
+        x = self.linear(x)
+        x = self.decoder(x)
+        return x
+
+    def encodage(self, x):
+        x = self.encoder(x)
+        x = self.flatten(x)
+        x = self.linear(x)
+
+    def decodage(self, x):
+        x = self.decoder(x)
+
+        
+def crossover(selections):
+    produits = []
+    for i in range(len(selections)-1):
+        crossover_point = 2600
+        
+        if (selections[i].shape[0] == 1):
+            prod1 = torch.cat((selections[i][0][:crossover_point], selections[i+1][0][crossover_point:]), dim=0)
+            prod2 = torch.cat((selections[i+1][0][:crossover_point], selections[i][0][crossover_point:]), dim=0)
+
+        else:
+            prod1 = torch.cat((selections[i][:crossover_point], selections[i+1][crossover_point:]), dim=0)
+            prod2 = torch.cat((selections[i+1][:crossover_point], selections[i][crossover_point:]), dim=0)
+
+        produits.append(prod1)
+        if (i == len(selections)-2):
+            produits.append(prod2)
+    return produits
+           
+def images_initiales(nombre_images,images_possibles_index,images_tot):
+
+    #random_index = [random.randint(0, len(images_possibles_index)) for _ in range(nombre_images)]
+    random_index = random.sample(range(len(images_possibles_index)), nombre_images)
+    images = [images_tot[images_possibles_index[index]][0].to(device) for index in random_index]
+    reconstructed = [autoencoder(images[i].unsqueeze(0)).squeeze(0) for i in range(len(images))]
+    return reconstructed,random_index
+    
+def algo_gen(selected):
+    encoded = [autoencoder.flatten(autoencoder.encoder(selected[i].permute(1, 2, 0).unsqueeze(0).permute(0, 2, 1, 3))) for i in range(len(selected))]
+    #encoded = [encodage(selected[i].permute(1, 2, 0).unsqueeze(0).permute(0, 2, 1, 3)) for i in range(len(selected))]
+    mutated = crossover(encoded)
+    decoded = [autoencoder.decoder(autoencoder.linear(mutated[i]).unsqueeze(0)) for i in range(len(mutated))]
+    #decoded = [decodage(mutated[i].unsqueeze(0)) for i in range(len(mutated))]
+    return decoded
+    
+
+def convert_image_to_tensor(list_images):
+    converted = []
+    for image in list_images:
+        # Convert Tkinter PhotoImage to PIL Image
+        pil_image = ImageTk.getimage(image)
+        
+        pil_image = pil_image.rotate(90)
+        
+        # Convert PIL Image to NumPy array
+        numpy_array = np.array(pil_image)[:,:,:3]/256
+
+        # Convert NumPy array to PyTorch tensor
+        tensor_image = torch.tensor(numpy_array, dtype=torch.float)
+        
+        converted.append(tensor_image)
+    return converted
+    
+def data_select(path_csv, gender, blond_hair, brown_hair, pale_skin): #black_hair, , gray_hair,
+    data = pd.read_csv(path_csv)
+    if gender != 0:
+        data = data.loc[data['Male'] == gender]
+    #if black_hair != 0:
+    #    data = data.loc[data['Black_Hair'] == black_hair]
+    if blond_hair != 0:
+        data = data.loc[data['Blond_Hair'] == blond_hair]
+    if brown_hair != 0:
+        data = data.loc[data['Brown_Hair'] == brown_hair]
+    #if gray_hair != 0:
+    #    data = data.loc[data['Gray_Hair'] == gray_hair]
+    if pale_skin != 0:
+        data = data.loc[data['Pale_Skin'] == pale_skin]
+    return data
+
+def data_selected(images_tot, gender, blond_hair, brown_hair, pale_skin):
+    # Get all targets from the dataset
+    targets = images_tot.attr.clone().detach()
+
+    # Create a mask to filter out the desired samples
+    mask = (targets[:, 9] == blond_hair) & (targets[:, 11] == brown_hair) & (targets[:, 20] == gender) & (targets[:, 26] == pale_skin)
+    
+    # Use the mask to filter out indices of the desired samples
+    possible_indices = torch.nonzero(mask).squeeze().tolist()
+    
+    return possible_indices
+    
+
 if __name__ == "__main__":
+    data_root = "datasets"
+    image_size = 256
+    transforms = tfms.Compose(
+        [
+            tfms.Resize((image_size, image_size)),
+            tfms.ToTensor(),
+        ]
+    )
+    test_dataset = datasets.CelebA(data_root, split="test", target_type=["attr", "landmarks"], transform=transforms)
+    
+        
+    # Créer une instance de votre autoencodeur
+    autoencoder = ConvAE3()
+
+    # Charger les poids entraînés dans votre modèle à partir du fichier
+    autoencoder.load_state_dict(torch.load("autoencoder_v7.pth", map_location=torch.device('cpu')))
+    # Mettre votre modèle en mode évaluation
+    autoencoder.eval()
+
+    encodeur = autoencoder.encoder
+    decodeur = autoencoder.decoder
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    autoencoder.to(device)
+
     app = Application()
     app.mainloop()
