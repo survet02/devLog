@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter.font import Font
 from tkinter import *
 from pathlib import Path
+from PIL import ImageTk, Image
 
 class finish_popup(tk.Toplevel):
     def __init__(self, parent):
@@ -33,19 +34,12 @@ class finish_popup(tk.Toplevel):
         )
 
         self.canvas.place(x = 0, y = 0)
-        self.canvas.create_rectangle(
-            224.021484375,
-            294.3404846191406,
-            290.55499267578125,
-            324.00000190734863,
-            fill="#000000",
-            outline="")
 
         self.canvas.create_rectangle(
-            32.0,
-            59.0,
-            273.0,
-            280.0,
+            45.0,
+            60.0,
+            260.0,
+            275.0,
             fill="#322160",
             outline="")
 
@@ -63,13 +57,19 @@ class finish_popup(tk.Toplevel):
         button.place(x=230, y=300)
 
     def image(self):
-        image_path = self.parent.selected_im[0]
-        self.label = tk.Label(self.parent, image=image_path)
-        self.label.place(x=30, y=65)
+        photo = self.parent.selected_im[0]
+        img_PIL = ImageTk.getimage(photo)
+        resized = img_PIL.resize((200,200))
+        self.tk_image = ImageTk.PhotoImage(resized)
+
+        self.label = tk.Label(self, image=self.tk_image)
+        self.label.image = photo  # Keep a reference to the image to prevent it from being garbage collected
+        self.label.place(x=50, y=65)
 
     def restart(self):
         self.parent.selected_im.clear()
         self.parent.clear_board()
+        self.parent.clear_history()
         self.destroy()
 
 if __name__ == "__main__":

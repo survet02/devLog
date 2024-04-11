@@ -39,11 +39,11 @@ class Application(tk.Tk):
         self.images = []
         self.selected_im = []
         self.board_button = []
-        self.history_button = []
+        self.history_buttons = []  # Store all history buttons
         self.click = False
         self.allow_selection = False
         self.button_bg = []
-        self.open_button = Button(self, command=self.button_open, height = 35, width = 35)
+        self.open_button = tk.Button(self, command=self.button_open, height=35, width=35)
         self.images_algo_gen = []
         self.possible_index = []
 
@@ -62,7 +62,7 @@ class Application(tk.Tk):
         self.background()
         self.create_menu_bar()
         self.add_button()
-        #self.scrolling_board()
+        #self.create_history_area()
         
 
 
@@ -248,28 +248,34 @@ class Application(tk.Tk):
     def button_arrow(self):
         """launches the genetic algorithm
         opens an error dialog if no images selected"""
-        if self.selected_im :
-            dim = (256,256)
-            self.history((805, 55))
+        if self.selected_im:
+            dim = (256, 256)
+        
+        # Create history buttons for selected images
+            self.history((805, 55))  # Ensure history buttons are created
+        
             for i in range(len(self.selected_im)):
                 if self.selected_im[i].width() != 256:
                     self.selected_im[i] = self.resize_im(self.selected_im[i], dim)
+        
             converted = convert_image_to_tensor(self.selected_im)
             self.images_algo_gen = algo_gen(converted)
             self.images_algo_gen = [self.images_algo_gen[i].squeeze(0) for i in range(len(self.images_algo_gen))]
             new = len(self.images) - len(self.selected_im)
-            new_images,index = images_initiales(new,self.possible_index,test_dataset)
+            new_images, index = images_initiales(new, self.possible_index, test_dataset)
             self.clear_board()
+        
             index = sorted(index, reverse=True)
             for i in range(len(new_images)):
-                    #self.images_algo_gen.append(torch.rot90(new_images[i].permute(2,0,1), k=3, dims=(1, 2)))
-                    self.possible_index.remove(self.possible_index[index[i]])
-                    self.images_algo_gen.append(new_images[i])
-            self.image_grid(len(self.images_algo_gen),self.images_algo_gen)
+                self.possible_index.remove(self.possible_index[index[i]])
+                self.images_algo_gen.append(new_images[i])
+        
+            self.image_grid(len(self.images_algo_gen), self.images_algo_gen)
+        
             self.allow_selection = False
+            self.button_sel.configure(background="white")
             self.selected_im = []  # Clear the list of selected images
-            return self.images_algo_gen
-        else :
+        else:
             messagebox.showinfo("Error", "No images were selected")
 
     def button_export(self):
@@ -316,8 +322,8 @@ class Application(tk.Tk):
         button_open = Button(self, image=self.image_open, command=self.button_open, height = 35, width = 35)
         button_open.place(x=5, y=15)
 
-        button_sel = Button(self, image=self.image_select, command=lambda : self.button_select(button_sel), height =35, width = 35)
-        button_sel.place(x=5, y=61)
+        self.button_sel = Button(self, image=self.image_select, command=lambda : self.button_select(self.button_sel), height =35, width = 35)
+        self.button_sel.place(x=5, y=61)
 
         button_round = Button(self, image=self.image_round, command=self.button_arrow, height =35, width = 35)
         button_round.place(x=5, y=107)
@@ -364,70 +370,84 @@ class Application(tk.Tk):
         for button in self.board_button:
             button.destroy()
 
-        # Destroy all background frames
-        for frame in self.button_bg:
-            frame.pack_forget()
-            frame.destroy()
-
         # Clear the lists
         self.board_button.clear()
-        self.button_bg.clear()
+
+    def clear_history(self):
+        for button in self.history_buttons:
+            button.destroy()
+    
+        self.history_buttons.clear()
   
 
-    def scrolling_board(self):
-        """ This function creates a canva with a scrolling bar
-        TO FINISH """
-        # Create the canvas
-        canvas = Canvas(self, bg="#201F1F", width=720, height=713)
-        canvas.place(x=57, y=11)
+    """ def create_history_area(self):
+        #Create a scrolling board in the history area.
+        # Create the canvas for history area
+        self.history_canvas = tk.Canvas(self, bg="#201F1F", width=130, height=700)
+        self.history_canvas.place(x=794, y=55)
 
-        # Create the vertical scrollbar
-        scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
-        scrollbar.place(x=762, y=11, height = 713)
+        # Create the vertical scrollbar for history area
+        self.history_scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.history_canvas.yview)
+        self.history_scrollbar.place(x=920, y=55, height=700)
 
-        # Configure canvas to use the scrollbar
-        canvas.config(yscrollcommand=scrollbar.set)
+        # Create a frame inside the canvas to hold the history images
+        self.history_scrollable_frame = tk.Frame(self.history_canvas, bg="#201F1F")
+        self.history_canvas.create_window((0, 0), window=self.history_scrollable_frame, anchor="nw")
 
-        # Call a method to add images to the canvas
-        images = self.image_grid(5)
+        # Bind events to configure the canvas scroll region
+        self.history_scrollable_frame.bind("<Configure>", self.on_history_frame_configure)
+        self.history_canvas.bind("<Configure>", self.on_history_canvas_configure)
 
-        #self.canvas.lower(scrollbar)
+    def on_history_frame_configure(self, event):
+        #Configure the history canvas scroll region.
+        self.history_canvas.configure(scrollregion=self.history_canvas.bbox("all"))
+
+    def on_history_canvas_configure(self, event):
+        #Update the history canvas scroll region when canvas is resized.
+        self.history_canvas.itemconfig(self.history_scrollable_frame, width=event.width)
+ """
+    def history(self, position):
+        """ This functions creates a history on the right side of the board where all the selected images can be saved"""
+        spacing = 10
+        x, y = position
+        dim = (100, 100)
+    
+        # Create buttons for newly selected images
+        new_buttons = []
+        for image in self.selected_im:
+            tk_image = self.resize_im(image, dim)
+            button = self.create_button(tk_image, [x, y], dim)
+            new_buttons.append(button)
+            y += 100 + spacing
+    
+        # Append new buttons to the existing history_buttons list
+        self.history_buttons.extend(new_buttons)
+    
+        return self.history_buttons
 
     def create_button(self, im, position, dim):
         """ In this function we can create buttons with given images on top of it, at a specific position and dimensions"""
-        bg = tk.Frame(self, highlightbackground="#201836", highlightcolor="#201836", highlightthickness=4, bd=0, height = dim[0]+9, width = dim[1] + 9)
-        bg.place(x=position[0]-2, y=position[1]-2)
-        button = Button(self, image=im, command=lambda : self.clicked(im, bg), height = dim[0], width = dim[1])
+        button = Button(self, image=im, command=lambda : self.clicked(im, button), height = dim[0], width = dim[1], borderwidth=0)
         button.place(x=position[0], y=position[1])
 
         return button
 
 
-    def clicked(self, im, bg):
+    def clicked(self, im, button):
         """ This function changes the appearance of the image buttons on the board when they are selected, but only if the tool selection was launched"""
         if self.allow_selection :
             if self.click and im in self.selected_im : 
-                bg.config( highlightbackground="#201836", highlightcolor="#201836")
+                button.config(relief=tk.FLAT)  # Change relief to give a sunken appearance
+                button.config(borderwidth=0)
                 self.selected_im.remove(im)
                 self.click = False
             else :
-                bg.config( highlightbackground="#9281C1", highlightcolor="#9281C1")
+                button.config(relief=tk.SUNKEN)  # Change relief to give a sunken appearance
+                button.config(borderwidth=3)
                 self.selected_im.append(im)
                 self.click = True
 
         return self.selected_im
-    
-    def history(self, position):
-        """ This functions creates a history on the right side of the board where all the selected images can be saved"""
-        spacing = 10
-        x, y = position
-        dim = (100,100)
-        for image in self.selected_im :
-            tk_image = self.resize_im(image, dim)
-            button = self.create_button(tk_image, [x, y], dim)
-            self.history_button.append(button)
-            y += 100 + spacing
-        return self.history_button  
 
     def resize_im(self, im, dim):
         img_PIL = ImageTk.getimage(im)
