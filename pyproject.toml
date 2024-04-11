@@ -2,20 +2,20 @@
 name = "faceguessr"
 version = "0.0.1"
 authors = [
-  { name="Demirli Gulsah", email="author@example.com" },
-  { name="Dvorestki Svetlana", email="author@example.com" },
-  { name="Grandidier Clément", email="author@example.com" },
-  { name="Koenig Zoé", email="author@example.com" }
+  { name="Demirli Gulsah", email="gulsah.demirli@insa-lyon.fr" },
+  { name="Dvorestki Svetlana", email="svetlana.dovertzki@insa-lyon.fr" },
+  { name="Grandidier Clément", email="clement.grandidier@insa-lyon.fr" },
+  { name="Koenig Zoé", email="zoe.koenig@insa-lyon.fr" }
 ]
-description = "A small example package"
+description = "A software to create faces"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache-2.0 License",
     "Operating System :: OS Independent",
 ]
 
 [project.urls]
-Homepage = "https://github.com/pypa/sampleproject"
-Issues = "https://github.com/pypa/sampleproject/issues"
+Homepage = "https://github.com/survet02/devLog"
+Issues = "https://github.com/survet02/devLog/issues"
