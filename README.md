@@ -41,7 +41,7 @@ python3 setup.py
 # 📦 How to use
 
 <details>
-<summary>Launch the software in your Terminal.</summary>
+<summary>Launch the software in your Terminal. You have to be in the faceguessr directory where the file application.py is.</summary>
 
 ```bash
 python3 application.py
