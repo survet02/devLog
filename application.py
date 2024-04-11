@@ -1,7 +1,4 @@
 from pathlib import Path
-
-# from tkinter import *
-# Explicit imports to satisfy Flake8
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
@@ -9,6 +6,7 @@ from tkinter import messagebox, filedialog
 from tkinter.filedialog import askopenfilename
 from PIL import Image, ImageTk
 from Pop_up import Pop_up
+from finish_popup import finish_popup
 
 class Application(tk.Tk):
     def __init__(self):
@@ -203,7 +201,7 @@ class Application(tk.Tk):
         else :
 
             self.allow_selection = True
-            button.configure(background = "red")
+            button.configure(background = "#9281C1")
         return self.allow_selection
 
     def button_arrow(self):
@@ -217,23 +215,15 @@ class Application(tk.Tk):
 
 
     def button_export(self):
-        """Opens file dialog to select folder + give name of the file (format PNG).
-        Opens an error dialog if no images selected."""
+        """Opens a pop-up window that displayed the finaly selected image."""
 
         if not self.selected_im:
             # If no images are selected, show an error dialog
             messagebox.showerror("Error", "No images selected.")
             return
+        else : 
+            pop_up = finish_popup(self)
 
-        file_path = filedialog.asksaveasfilename(
-            title="Save File",
-            defaultextension=".png",
-            filetypes=[("PNG files", "*.png")]
-        )
-
-        if file_path:
-            # If a file path is chosen, export the selected images to a PNG file
-            self.save_image(file_path)
         
     def open_image(self, path, dimension):
         """ Allows to open images in a given path and with given dimensions"""
@@ -344,7 +334,7 @@ class Application(tk.Tk):
                 self.selected_im.remove(im)
                 self.click = False
             else :
-                bg.config( highlightbackground="red", highlightcolor="red")
+                bg.config( highlightbackground="#9281C1", highlightcolor="#9281C1")
                 self.selected_im.append(im)
                 self.click = True
 
