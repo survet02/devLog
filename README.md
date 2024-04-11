@@ -16,7 +16,6 @@ Installing the library with pip is the easiest way to get started with faceguess
 
 ```bash
 python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps faceguessr
-
 ```
 
 If you do not have all the required packages, use : 
@@ -24,6 +23,16 @@ If you do not have all the required packages, use :
 ```bash
 pip install -r requirements.txt
 ```
+
+```bash
+cd lib/python3.9/site-packages/faceguessr
+```
+
+```bash
+python3 setup.py 
+```
+
+
 
 </details>
 
