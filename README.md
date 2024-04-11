@@ -15,7 +15,8 @@ Install the faceguessr software using PyPI.
 Installing the library with pip is the easiest way to get started with faceguessr.
 
 ```bash
-pip install faceguessr
+python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps faceguessr
+
 ```
 
 If you do not have all the required packages, use : 
