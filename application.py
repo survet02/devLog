@@ -46,6 +46,7 @@ class Application(tk.Tk):
         self.open_button = tk.Button(self, command=self.button_open, height=35, width=35)
         self.images_algo_gen = []
         self.possible_index = []
+        self.history_initial_position = (805, 55)
 
         self.canvas = tk.Canvas(
             self,
@@ -252,7 +253,7 @@ class Application(tk.Tk):
             dim = (256, 256)
         
         # Create history buttons for selected images
-            self.history((805, 55))  # Ensure history buttons are created
+            self.history(self.history_initial_position)  # Ensure history buttons are created
         
             for i in range(len(self.selected_im)):
                 if self.selected_im[i].width() != 256:
@@ -420,6 +421,7 @@ class Application(tk.Tk):
             new_buttons.append(button)
             y += 100 + spacing
     
+        self.history_initial_position = (x,y)
         # Append new buttons to the existing history_buttons list
         self.history_buttons.extend(new_buttons)
     
