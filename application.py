@@ -409,7 +409,12 @@ class Application(tk.Tk):
         
         self.history_initial_position = (x,y)
         # Append new buttons to the existing history_buttons list
-        for i in range((nb_images_tot-max_history_images), len(self.history_buttons)):
+        if (nb_images_tot-max_history_images)>0:
+            start = nb_images_tot-max_history_images
+        else:
+            start = 0
+            
+        for i in range(start, len(self.history_buttons)):
             new_buttons.append(self.history_buttons[i])
         self.history_buttons = new_buttons
         return self.history_buttons
