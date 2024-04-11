@@ -24,6 +24,8 @@ If you do not have all the required packages, use :
 pip install -r requirements.txt
 ```
 
+Then go to the folder where faceguessr is : 
+
 ```bash
 cd lib/python3.9/site-packages/faceguessr
 ```
