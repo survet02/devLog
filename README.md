@@ -57,4 +57,5 @@ python3 application.py
   <img src="https://github.com/survet02/devLog/blob/main/images/round.png" width="100">
 </p>
 
+The selected images are displayed in the hsitory panel. The newly generated images are on top. Non-selected images are replaced by others. 
 </details>
