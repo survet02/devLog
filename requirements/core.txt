@@ -1,5 +1,0 @@
-Pillow
-wget
-torch
-torchvision
-pandas
