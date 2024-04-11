@@ -18,6 +18,12 @@ Installing the library with pip is the easiest way to get started with faceguess
 pip install faceguessr
 ```
 
+If you do not have all the required packages, use : 
+
+```bash
+pip install -r requirements.txt
+```
+
 </details>
 
 # 📦 How to use
