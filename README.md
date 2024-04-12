@@ -41,7 +41,7 @@ pip install -r requirements.txt
 Launch setup.py the first time you download faceguessr in order to download the remaining files needed to use faceguessr.
 
 ```bash
-python3 setup.py 
+python3 setup_before_launch.py 
 ```
 
 
