@@ -200,6 +200,8 @@ class Application(tk.Tk):
     def on_popUp_finish(self, info):
         """Waits for actions in open_button/Pop_up to finish before displaying the images on the board."""
         self.open_button.config(state=tk.NORMAL)
+        self.clear_board()
+        self.clear_history()
         gender = 0
         blond_hair = 0
         brown_hair = 0
