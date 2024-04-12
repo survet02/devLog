@@ -8,9 +8,9 @@ from PIL import Image, ImageTk
 from Pop_up import Pop_up
 from finish_popup import finish_popup
 
-import os
-import wget
-import zipfile
+#import os
+#import wget
+#import zipfile
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as tfms
@@ -19,9 +19,9 @@ import random
 import matplotlib.pyplot as plt
 from torchvision import transforms
 import numpy as np
-import tempfile
+#import tempfile
 from torchvision.transforms import ToTensor
-import io
+#import io
 import pandas as pd
 
 class Application(tk.Tk):
