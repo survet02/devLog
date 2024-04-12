@@ -181,12 +181,13 @@ class Application(tk.Tk):
         self.clear_board()
         self.clear_history()
         self.button_sel.configure(background = "white")
+        self.allow_selection = False
 
     def do_about(self):
         """Displays information about the software."""
 
-        message = """   FaceGuessr was build by four students in 4th year at INSA Lyon in the Department of BioInformatics.
-        The software aims at generating images of faces according to a genetic algorithm. The idea is to display faces from a known database and to create new face from selected ones."""
+        message = """   FaceGuessr was built by four students in 4th year at INSA Lyon in the Department of BioInformatics.
+        The software aims at generating images of faces according to a genetic algorithm. The idea is to display faces from a known database and to create new faces from selected ones."""
 
 
         messagebox.showinfo("About FaceGuessr", message)
@@ -200,6 +201,7 @@ class Application(tk.Tk):
     def on_popUp_finish(self, info):
         """Waits for actions in open_button/Pop_up to finish before displaying the images on the board."""
         self.open_button.config(state=tk.NORMAL)
+        self.allow_selection = False
         self.clear_board()
         self.clear_history()
         gender = 0
@@ -288,6 +290,7 @@ class Application(tk.Tk):
             return
         else : 
             pop_up = finish_popup(self)
+            self.allow_selection = False
 
         
     def open_image(self, path, dimension):
