@@ -204,6 +204,7 @@ class Application(tk.Tk):
         self.allow_selection = False
         self.clear_board()
         self.clear_history()
+        self.history_initial_position = (805, 55)
         gender = 0
         blond_hair = 0
         brown_hair = 0
