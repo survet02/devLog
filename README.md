@@ -93,7 +93,7 @@ python3 application.py
   <img src="https://github.com/survet02/devLog/blob/main/images/round.png" width="100">
 </p>
 
-The selected images are displayed in the history panel. Newly generated images are surrounded by a golden rectangle. Non-selected images are replaced by new images from celebA.
+The selected images are displayed in the history panel. Newly generated images are surrounded by a golden rectangle. Non-selected images are replaced by new images from CelebA.
 
 6. Click on this icon to select the final image that you are happy with :
 
