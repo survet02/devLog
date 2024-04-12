@@ -199,7 +199,12 @@ class Application(tk.Tk):
         pop_up = Pop_up(self)
     
     def on_popUp_finish(self, info):
-        """Waits for actions in open_button/Pop_up to finish before displaying the images on the board."""
+        """Waits for actions in open_button/Pop_up to finish before displaying the images on the board. 
+        The method updates the GUI state to indicate that actions in the Pop_up window are finished.
+        It then clears the board and history, retrieves a list of possible image indices based on the user's selection,
+        and displays the specified number of images on the board if there are enough available images.
+        If there are not enough available images, it displays an error message."""
+        
         self.open_button.config(state=tk.NORMAL)
         self.allow_selection = False
         self.clear_board()
@@ -504,6 +509,7 @@ class ConvAE3(nn.Module): #tester 3 ->8 8->16 16->32, prendre images en 128, VV 
 
         
 def crossover(selections):
+     """Performs crossover operation on a list of selected individuals."""
     produits = []
     for i in range(len(selections)-1):
         crossover_point = 2600
@@ -522,6 +528,7 @@ def crossover(selections):
     return produits
            
 def images_initiales(nombre_images,images_possibles_index,images_tot):
+    """Selects a specified number of initial images from a list of possible indices."""
     if len(images_possibles_index)>= nombre_images:
         random_index = random.sample(range(len(images_possibles_index)), nombre_images)
         images = [images_tot[images_possibles_index[index]][0].to(device) for index in random_index]
@@ -533,15 +540,15 @@ def images_initiales(nombre_images,images_possibles_index,images_tot):
 
     
 def algo_gen(selected):
+    """Applies a genetic algorithm to a list of selected images."""
     encoded = [autoencoder.flatten(autoencoder.encoder(selected[i].permute(1, 2, 0).unsqueeze(0).permute(0, 2, 1, 3))) for i in range(len(selected))]
-    #encoded = [encodage(selected[i].permute(1, 2, 0).unsqueeze(0).permute(0, 2, 1, 3)) for i in range(len(selected))]
     mutated = crossover(encoded)
     decoded = [autoencoder.decoder(autoencoder.linear(mutated[i]).unsqueeze(0)) for i in range(len(mutated))]
-    #decoded = [decodage(mutated[i].unsqueeze(0)) for i in range(len(mutated))]
     return decoded
     
 
 def convert_image_to_tensor(list_images):
+    """Converts a list of Tkinter PhotoImage objects to PyTorch tensors."""
     converted = []
     for image in list_images:
         # Convert Tkinter PhotoImage to PIL Image
@@ -560,6 +567,8 @@ def convert_image_to_tensor(list_images):
     
 
 def data_selected(images_tot, gender, blond_hair, brown_hair, pale_skin):
+    """Filters indices of images based on specified attributes."""
+
     # Get all targets from the dataset
     targets = images_tot.attr.clone().detach()
 
